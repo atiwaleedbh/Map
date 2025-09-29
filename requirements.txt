@@ -1,6 +1,6 @@
 streamlit
 pandas
-googlemaps>=5.7.0
+googlemaps
 openai>=1.0.0
 requests
 python-dotenv
