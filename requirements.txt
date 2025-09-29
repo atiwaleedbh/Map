@@ -4,4 +4,4 @@ google-generativeai
 python-dotenv
 pandas
 requests
-openai
+openai>=1.0.0
