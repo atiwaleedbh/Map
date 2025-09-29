@@ -1,37 +1,33 @@
-# app.py — Streamlit + Google Maps + OpenAI ChatGPT classifier (updated)
+# app.py — Streamlit + Google Maps + OpenAI ChatGPT classifier (using gpt-3.5-turbo)
 
 import os, re, time, requests, pandas as pd, googlemaps, streamlit as st
 from openai import OpenAI
 from dotenv import load_dotenv
 
-# -------------------------
-# 1️⃣ Load .env if present & secrets
-# -------------------------
+# Load environment
 load_dotenv()
 MAPS_KEY = os.getenv("GOOGLE_MAPS_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_MODEL = "gpt-3.5-turbo"  # <= Updated to 3.5 to reduce quota usage
 
 client = OpenAI(api_key=OPENAI_KEY)
 
 st.set_page_config(page_title="Restaurant Classifier", layout="wide")
-st.title("🍽️ Restaurant Classifier — Streamlit + ChatGPT")
+st.title("🍽️ Restaurant Classifier — Streamlit + ChatGPT (3.5-turbo)")
 
-# Sidebar keys override
+# Sidebar: keys override
 with st.sidebar:
     st.header("API Keys / Settings")
     maps_key_input = st.text_input("Google Maps API Key", value=MAPS_KEY, type="password")
     openai_key_input = st.text_input("OpenAI API Key", value=OPENAI_KEY, type="password")
-    model_input = st.text_input("OpenAI Model (optional)", value=OPENAI_MODEL)
     if st.button("Update Keys"):
         MAPS_KEY = maps_key_input.strip()
         OPENAI_KEY = openai_key_input.strip()
-        OPENAI_MODEL = model_input.strip()
         client.api_key = OPENAI_KEY
         st.success("Keys updated (in-memory)")
 
 # -------------------------
-# 2️⃣ Helpers
+# Helpers
 # -------------------------
 def expand_short_url(url, timeout=4):
     try:
@@ -42,17 +38,14 @@ def expand_short_url(url, timeout=4):
 
 def extract_coordinates(url: str):
     start = time.time()
-    if not url:
-        return None, None, 0
+    if not url: return None, None, 0
     u = url.strip()
     if "maps.app.goo.gl" in u or "goo.gl" in u:
         u = expand_short_url(u)
     m = re.search(r'@([-+]?\d+\.\d+),([-+]?\d+\.\d+)', u)
-    if m:
-        return float(m.group(1)), float(m.group(2)), round(time.time()-start,3)
+    if m: return float(m.group(1)), float(m.group(2)), round(time.time()-start,3)
     m = re.search(r'!3d([-+]?\d+\.\d+)!4d([-+]?\d+\.\d+)', u)
-    if m:
-        return float(m.group(1)), float(m.group(2)), round(time.time()-start,3)
+    if m: return float(m.group(1)), float(m.group(2)), round(time.time()-start,3)
     return None, None, round(time.time()-start,3)
 
 def fetch_restaurants(lat, lng, maps_key, radius=3000, max_pages=3):
@@ -118,7 +111,7 @@ def classify_restaurant(name, address, types, timeout_s=30):
         return f"❌ Error: {e}", None
 
 # -------------------------
-# 3️⃣ Streamlit session state
+# Streamlit session state
 # -------------------------
 if "coords" not in st.session_state: st.session_state["coords"]=None
 if "restaurants" not in st.session_state: st.session_state["restaurants"]=None
@@ -126,7 +119,7 @@ if "classified" not in st.session_state: st.session_state["classified"]=[]
 if "index" not in st.session_state: st.session_state["index"]=0
 
 # -------------------------
-# 4️⃣ UI
+# UI
 # -------------------------
 st.markdown("### 1) Paste Google Maps URL")
 url = st.text_input("Google Maps URL here:")
