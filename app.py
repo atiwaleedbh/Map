@@ -15,7 +15,7 @@ load_dotenv()
 # Read keys from environment or Streamlit secrets
 MAPS_KEY = os.getenv("GOOGLE_MAPS_KEY", "")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL = "gpt-3.5-turbo"  # النسخة المجانية تقريبًا
+OPENAI_MODEL = "gpt-3.5-turbo"  # النسخة الأقل تكلفة
 
 st.set_page_config(page_title="Restaurant Classifier", layout="wide")
 st.title("🍽️ Restaurant Classifier — Step by Step (gpt-3.5-turbo)")
@@ -75,15 +75,16 @@ CATEGORIES_AR = [
     "أخرى"
 ]
 
-# Classifier
+# Classifier using new OpenAI interface
 def classify_restaurant(name, address, types):
     openai.api_key = OPENAI_KEY
-    system_msg = "صنّف المطعم إلى أحد التصنيفات التالية بدقة: " + ", ".join(CATEGORIES_AR) + ". أجب فقط بالكلمة العربية المطابقة."
-    user_msg = f"Name: {name}\nAddress: {address}\nTypes: {types}"
     try:
-        resp = openai.ChatCompletion.create(
+        resp = openai.chat.completions.create(
             model=OPENAI_MODEL,
-            messages=[{"role":"system","content":system_msg}, {"role":"user","content":user_msg}],
+            messages=[
+                {"role": "system", "content": "صنّف المطعم إلى أحد التصنيفات التالية بدقة: " + ", ".join(CATEGORIES_AR) + ". أجب فقط بالكلمة العربية المطابقة."},
+                {"role": "user", "content": f"Name: {name}\nAddress: {address}\nTypes: {types}"}
+            ],
             max_tokens=20,
             temperature=0
         )
